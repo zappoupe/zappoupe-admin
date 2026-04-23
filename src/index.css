@@ -1,0 +1,54 @@
+@import "tailwindcss";
+
+:root {
+  --bg-primary: #F2F7E8;
+  --text-main: #153703;
+  --sidebar-bg: #153703;
+  --header-bg: #2C371F;
+  --accent-dark: #365824;
+  --btn-primary: #5B782A;
+  --btn-secondary: #607655;
+  --accent-light: #6F8555;
+  --border-color: #666666;
+  --white: #FFFFFF;
+}
+
+/* Custom Date Input Styling - Clean and robust */
+input[type="date"]::-webkit-inner-spin-button,
+input[type="date"]::-webkit-calendar-picker-indicator {
+  display: none;
+  -webkit-appearance: none;
+}
+
+input[type="date"] {
+  cursor: pointer;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-main);
+  line-height: 1.5;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-family: inherit;
+}
+
+ul {
+  list-style: none;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}

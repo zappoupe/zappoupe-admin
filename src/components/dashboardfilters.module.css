@@ -1,0 +1,232 @@
+/* dashboardfilters.module.css */
+
+.container {
+  width: 100%;
+  margin-bottom: 2rem;
+}
+
+.card {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Para telas grandes */
+@media (min-width: 1024px) {
+  .wrapper {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.quickFilters {
+  display: flex;
+  align-items: center;
+  background-color: #f3f4f6;
+  padding: 0.25rem;
+  border-radius: 0.5rem;
+  border: 1px solid #e5e7eb;
+  overflow-x: auto;
+}
+
+.quickFilterBtn {
+  flex: 1;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #4b5563;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+@media (min-width: 640px) {
+  .quickFilterBtn {
+    flex: none;
+  }
+}
+
+.quickFilterBtn:hover:not(.active) {
+  color: #166534;
+  background-color: #e5e7eb;
+}
+
+.quickFilterBtn.active {
+  background-color: #ffffff;
+  color: #166534;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.divider {
+  display: none;
+  width: 1px;
+  height: 2.5rem;
+  background-color: #e5e7eb;
+}
+
+@media (min-width: 1024px) {
+  .divider {
+    display: block;
+  }
+}
+
+.customRange {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .customRange {
+    flex-direction: row;
+    align-items: center;
+    width: auto;
+  }
+}
+
+.inputsWrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .inputsWrapper {
+    width: auto;
+  }
+}
+
+.inputGroup {
+  position: relative;
+  display: flex;
+  flex: 1;
+  align-items: center;
+}
+
+@media (min-width: 640px) {
+  .inputGroup {
+    width: 10rem;
+  }
+}
+
+.inputIcon {
+  position: absolute;
+  left: 0.75rem;
+  color: #9ca3af;
+  pointer-events: none;
+  transition: color 0.2s;
+}
+
+.inputGroup:focus-within .inputIcon {
+  color: #15803d;
+}
+
+.dateInput {
+  width: 100%;
+  padding: 0.5rem 0.75rem 0.5rem 2.25rem;
+  background-color: #f9fafb;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  color: #374151;
+  outline: none;
+  transition: all 0.2s;
+  box-sizing: border-box;
+}
+
+.dateInput:focus {
+  background-color: #ffffff;
+  border-color: #15803d;
+  box-shadow: 0 0 0 2px rgba(21, 128, 61, 0.2);
+}
+
+/* Esconde o ícone nativo, deixando o input clicável na área toda */
+.dateInput::-webkit-calendar-picker-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.separator {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #9ca3af;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .actions {
+    width: auto;
+  }
+}
+
+.filterBtn {
+  background-color: #166534;
+  color: white;
+  padding: 0.5rem 1.5rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex: 1;
+}
+
+@media (min-width: 640px) {
+  .filterBtn {
+    flex: none;
+  }
+}
+
+.filterBtn:hover {
+  background-color: #14532d;
+}
+
+.filterBtn:active {
+  transform: scale(0.98);
+}
+
+.clearBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  color: #9ca3af;
+  background: transparent;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.clearBtn:hover {
+  color: #dc2626;
+  background-color: #fef2f2;
+}

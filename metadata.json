@@ -1,0 +1,5 @@
+{
+  "name": "Zappoupe Admin Dashboard",
+  "description": "Internal administrative panel for Zappoupe platform management.",
+  "requestFramePermissions": []
+}

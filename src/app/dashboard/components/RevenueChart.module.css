@@ -1,0 +1,104 @@
+.chartContainer {
+  background-color: var(--white);
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+  border: 1px solid rgba(102, 102, 102, 0.1);
+  height: 350px;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.title {
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+.select {
+  padding: 0.5rem;
+  border: 1px solid rgba(102, 102, 102, 0.2);
+  border-radius: 6px;
+  font-size: 0.875rem;
+  outline: none;
+  color: var(--border-color);
+}
+
+.chartArea {
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  padding-bottom: 1rem;
+}
+
+.bars {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 1rem;
+}
+
+.barWrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  justify-content: flex-end;
+}
+
+.bar {
+  width: 100%;
+  max-width: 40px;
+  background-color: var(--btn-primary);
+  border-radius: 6px 6px 0 0;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.bar:hover {
+  background-color: var(--accent-dark);
+}
+
+.tooltip {
+  position: absolute;
+  top: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--sidebar-bg);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+}
+
+.bar:hover .tooltip {
+  opacity: 1;
+}
+
+.label {
+  margin-top: 0.75rem;
+  font-size: 0.75rem;
+  color: var(--border-color);
+}
+
+.loading {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--border-color);
+  font-size: 0.875rem;
+}

@@ -1,0 +1,71 @@
+.layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+@media (min-width: 1025px) {
+  .layout {
+    flex-direction: row;
+  }
+}
+
+.mainContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  transition: margin-left 0.3s ease;
+}
+
+@media (min-width: 1025px) {
+  .mainContent {
+    margin-left: 260px;
+  }
+}
+
+.container {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .container {
+    padding: 2rem;
+    gap: 2rem;
+  }
+}
+
+.welcomeSection {
+  margin-bottom: 0.5rem;
+}
+
+.pageTitle {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.pageSubtitle {
+  color: var(--border-color);
+  font-size: 0.875rem;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
+}
+
+.contentGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 1200px) {
+  .contentGrid {
+    grid-template-columns: 1fr 1.2fr;
+  }
+}

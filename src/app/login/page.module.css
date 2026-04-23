@@ -1,0 +1,163 @@
+.container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f8fafc;
+  padding: 1.5rem;
+}
+
+.loginCard {
+  background-color: white;
+  border-radius: 1rem;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 420px;
+  padding: 2.5rem;
+  border: 1px solid #e2e8f0;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.logoContainer {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 4rem;
+  height: 4rem;
+  background-color: #153703;
+  color: white;
+  border-radius: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.logoIcon {
+  color: white;
+}
+
+.header h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 0.5rem;
+}
+
+.header p {
+  color: #64748b;
+  font-size: 0.875rem;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.errorMessage {
+  background-color: #fef2f2;
+  color: #dc2626;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  border: 1px solid #fee2e2;
+  text-align: center;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.inputGroup label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.inputWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.icon {
+  position: absolute;
+  left: 0.75rem;
+  color: #94a3b8;
+}
+
+.inputWrapper input {
+  width: 100%;
+  padding: 0.75rem 0.75rem 0.75rem 2.5rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+  background-color: #f8fafc;
+}
+
+.inputWrapper input:focus {
+  outline: none;
+  border-color: #153703;
+  background-color: white;
+  box-shadow: 0 0 0 3px rgba(21, 55, 3, 0.1);
+}
+
+.loginButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: #153703;
+  color: white;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 0.5rem;
+}
+
+.loginButton:hover:not(:disabled) {
+  background-color: #2C371F;
+}
+
+.loginButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.footer {
+  margin-top: 2.5rem;
+  text-align: center;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 1.5rem;
+}
+
+.footer p {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+@media (max-width: 480px) {
+  .loginCard {
+    padding: 1.5rem;
+    box-shadow: none;
+    border: none;
+    background-color: transparent;
+  }
+}

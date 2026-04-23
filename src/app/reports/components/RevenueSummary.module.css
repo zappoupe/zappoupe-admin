@@ -1,0 +1,55 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.card {
+  background-color: var(--white);
+  padding: 1.5rem;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  border: 1px solid rgba(102, 102, 102, 0.1);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+}
+
+.icon {
+  width: 56px;
+  height: 56px;
+  background-color: var(--bg-primary);
+  color: var(--btn-primary);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.info span {
+  font-size: 0.875rem;
+  color: var(--border-color);
+  font-weight: 500;
+}
+
+.info h3 {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text-main);
+  margin: 0.25rem 0;
+}
+
+.trend {
+  font-size: 0.75rem;
+  color: var(--btn-primary);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.subtext {
+  font-size: 0.75rem;
+  color: var(--border-color);
+  opacity: 0.8;
+}
