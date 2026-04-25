@@ -28,12 +28,38 @@
 }
 
 .header {
-  padding: 1.5rem;
+  padding: 1.25rem 1.5rem;
   background-color: var(--sidebar-bg);
   color: var(--white);
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 1rem;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+.stepDots {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.stepDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.3);
+  transition: background-color 0.3s;
+}
+
+.stepDotActive {
+  background-color: rgba(255, 255, 255, 0.9);
 }
 
 .header h3 {
@@ -219,6 +245,26 @@
   color: var(--text-main);
 }
 
+.backBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.75rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--border-color);
+  transition: color 0.2s;
+}
+
+.backBtn:hover:not(:disabled) {
+  color: var(--text-main);
+}
+
+.backBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .submitBtn {
   display: flex;
   align-items: center;
@@ -248,4 +294,97 @@
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
+}
+
+/* ── Confirmation Step ── */
+
+.confirmStep {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.inviteIconWrapper {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background-color: var(--btn-primary);
+  color: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+.confirmInfo {
+  font-size: 0.8125rem;
+  color: var(--border-color);
+  text-align: center;
+  line-height: 1.5;
+}
+
+.confirmCard {
+  background-color: var(--bg-primary);
+  border: 1px solid rgba(102, 102, 102, 0.15);
+  border-radius: 12px;
+  padding: 1.125rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.confirmRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.confirmRowIcon {
+  color: var(--btn-primary);
+  opacity: 0.75;
+  flex-shrink: 0;
+}
+
+.confirmRowContent {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.confirmRowLabel {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--border-color);
+}
+
+.confirmRowValue {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-main);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.optionBadges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding-top: 0.25rem;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.625rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background-color: rgba(102, 102, 102, 0.08);
+  color: var(--btn-primary);
+  border: 1px solid rgba(102, 102, 102, 0.12);
 }

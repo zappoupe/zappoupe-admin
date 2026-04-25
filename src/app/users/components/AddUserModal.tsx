@@ -1,7 +1,7 @@
 import { useState, FormEvent } from 'react';
 import styles from './AddUserModal.module.css';
-import { X, User, Phone, CreditCard, Calendar, Check, Loader2, Mail, Users } from 'lucide-react';
-import { supabase } from '../../../lib/supabase';
+import { X, User, Phone, Check, Loader2, Mail, Calendar, ArrowLeft, Send } from 'lucide-react';
+import { supabase, adminSupabase } from '../../../lib/supabase';
 
 interface AddUserModalProps {
   isOpen: boolean;
@@ -9,25 +9,37 @@ interface AddUserModalProps {
   onUserAdded?: () => void;
 }
 
+const defaultForm = {
+  nome: '',
+  email: '',
+  telefone: '',
+  plano_vitalicio: false,
+  usuario_teste: false,
+  dias_teste: '7',
+};
+
 export default function AddUserModal({ isOpen, onClose, onUserAdded }: AddUserModalProps) {
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    nome: '',
-    email: '',
-    telefone: '',
-    plano_vitalicio: false,
-    usuario_teste: false,
-    dias_teste: '7',
-  });
+  const [step, setStep] = useState<1 | 2>(1);
+  const [formData, setFormData] = useState(defaultForm);
 
   if (!isOpen) return null;
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+  const handleClose = () => {
+    setStep(1);
+    setFormData(defaultForm);
+    onClose();
+  };
 
+  const handleNextStep = (e: FormEvent) => {
+    e.preventDefault();
+    setStep(2);
+  };
+
+  const handleConfirm = async () => {
+    setLoading(true);
     try {
-      const { error } = await supabase
+      const { error: dbError } = await supabase
         .from('admin_users')
         .insert([
           {
@@ -39,24 +51,36 @@ export default function AddUserModal({ isOpen, onClose, onUserAdded }: AddUserMo
             usuario_teste: formData.usuario_teste,
             dias_teste: formData.usuario_teste ? parseInt(formData.dias_teste) || 0 : 0,
             ativo: true,
-          }
+            // Perfil padrão
+            renda_mensal: 0,
+            faixa_renda: '0-1000',
+            personalidade_bot: 'friendly',
+            proatividade_bot: 'medium',
+            dicas_economia: true,
+            sugestoes_excedente: true,
+            economia_automatica: false,
+            metas: [],
+          },
         ]);
-      
-      if (error) throw error;
+      if (dbError) throw dbError;
+
+      const { data: inviteData, error: inviteError } = await adminSupabase.auth.admin.inviteUserByEmail(
+        formData.email,
+        { data: { nome: formData.nome, celular: formData.telefone } }
+      );
+      if (inviteError) throw inviteError;
+
+      if (inviteData?.user?.id) {
+        await adminSupabase.auth.admin.updateUserById(inviteData.user.id, {
+          app_metadata: { role: 'admin' },
+        });
+      }
 
       if (onUserAdded) onUserAdded();
-      onClose();
-      setFormData({
-        nome: '',
-        email: '',
-        telefone: '',
-        plano_vitalicio: false,
-        usuario_teste: false,
-        dias_teste: '7',
-      });
+      handleClose();
     } catch (error: any) {
-      console.error('Erro ao salvar usuário:', error);
-      alert('Erro ao salvar usuário: ' + (error.message || 'Verifique a tabela admin_users no Supabase'));
+      console.error('Erro ao criar administrador:', error);
+      alert('Erro ao criar administrador: ' + (error.message || 'Verifique as configurações'));
     } finally {
       setLoading(false);
     }
@@ -66,105 +90,180 @@ export default function AddUserModal({ isOpen, onClose, onUserAdded }: AddUserMo
     <div className={styles.overlay}>
       <div className={styles.modal}>
         <div className={styles.header}>
-          <h3>Adicionar Administrador</h3>
-          <button onClick={onClose} className={styles.closeBtn}>
-            <X size={20} />
-          </button>
+          <h3>{step === 1 ? 'Adicionar Administrador' : 'Confirmar Criação'}</h3>
+          <div className={styles.headerRight}>
+            <div className={styles.stepDots}>
+              <span className={`${styles.stepDot} ${styles.stepDotActive}`} />
+              <span className={`${styles.stepDot} ${step === 2 ? styles.stepDotActive : ''}`} />
+            </div>
+            <button onClick={handleClose} className={styles.closeBtn}>
+              <X size={20} />
+            </button>
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit} className={styles.form}>
-          <div className={styles.inputGroup}>
-            <label>Nome Completo</label>
-            <div className={styles.inputWrapper}>
-              <User size={18} className={styles.icon} />
-              <input 
-                type="text" 
-                placeholder="Ex: João Silva" 
-                required 
-                value={formData.nome}
-                onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-              />
-            </div>
-          </div>
-
-          <div className={styles.inputGroup}>
-            <label>Email</label>
-            <div className={styles.inputWrapper}>
-              <Mail size={18} className={styles.icon} />
-              <input 
-                type="email" 
-                placeholder="joao@exemplo.com" 
-                required 
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              />
-            </div>
-          </div>
-
-          <div className={styles.inputGroup}>
-            <label>Número de Telefone</label>
-            <div className={styles.inputWrapper}>
-              <Phone size={18} className={styles.icon} />
-              <input 
-                type="text" 
-                placeholder="(00) 00000-0000" 
-                required 
-                value={formData.telefone}
-                onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
-              />
-            </div>
-          </div>
-
-          <div className={styles.adminFields}>
-            <div className={styles.toggles}>
-              <label className={styles.toggleWrapper}>
-                <input 
-                  type="checkbox" 
-                  checked={formData.plano_vitalicio}
-                  onChange={(e) => setFormData({ ...formData, plano_vitalicio: e.target.checked })}
+        {step === 1 ? (
+          <form onSubmit={handleNextStep} className={styles.form}>
+            <div className={styles.inputGroup}>
+              <label>Nome Completo</label>
+              <div className={styles.inputWrapper}>
+                <User size={18} className={styles.icon} />
+                <input
+                  type="text"
+                  placeholder="Ex: João Silva"
+                  required
+                  value={formData.nome}
+                  onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
                 />
-                <span className={styles.slider}></span>
-                <span className={styles.toggleLabel}>Plano Vitalício</span>
-              </label>
-
-              <label className={styles.toggleWrapper}>
-                <input 
-                  type="checkbox" 
-                  checked={formData.usuario_teste}
-                  onChange={(e) => setFormData({ ...formData, usuario_teste: e.target.checked })}
-                />
-                <span className={styles.slider}></span>
-                <span className={styles.toggleLabel}>Usuário Teste</span>
-              </label>
+              </div>
             </div>
 
-            {formData.usuario_teste && (
-              <div className={`${styles.inputGroup} ${styles.fadeIn}`}>
-                <label>Dias de Teste</label>
-                <div className={styles.inputWrapper}>
-                  <Calendar size={18} className={styles.icon} />
-                  <input 
-                    type="number" 
-                    placeholder="Ex: 7" 
-                    min="1"
-                    value={formData.dias_teste}
-                    onChange={(e) => setFormData({ ...formData, dias_teste: e.target.value })}
+            <div className={styles.inputGroup}>
+              <label>Email</label>
+              <div className={styles.inputWrapper}>
+                <Mail size={18} className={styles.icon} />
+                <input
+                  type="email"
+                  placeholder="joao@exemplo.com"
+                  required
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div className={styles.inputGroup}>
+              <label>Número de Telefone</label>
+              <div className={styles.inputWrapper}>
+                <Phone size={18} className={styles.icon} />
+                <input
+                  type="text"
+                  placeholder="(00) 00000-0000"
+                  required
+                  value={formData.telefone}
+                  onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div className={styles.adminFields}>
+              <div className={styles.toggles}>
+                <label className={styles.toggleWrapper}>
+                  <input
+                    type="checkbox"
+                    checked={formData.plano_vitalicio}
+                    onChange={(e) => setFormData({ ...formData, plano_vitalicio: e.target.checked })}
                   />
+                  <span className={styles.slider}></span>
+                  <span className={styles.toggleLabel}>Plano Vitalício</span>
+                </label>
+
+                <label className={styles.toggleWrapper}>
+                  <input
+                    type="checkbox"
+                    checked={formData.usuario_teste}
+                    onChange={(e) => setFormData({ ...formData, usuario_teste: e.target.checked })}
+                  />
+                  <span className={styles.slider}></span>
+                  <span className={styles.toggleLabel}>Usuário Teste</span>
+                </label>
+              </div>
+
+              {formData.usuario_teste && (
+                <div className={`${styles.inputGroup} ${styles.fadeIn}`}>
+                  <label>Dias de Teste</label>
+                  <div className={styles.inputWrapper}>
+                    <Calendar size={18} className={styles.icon} />
+                    <input
+                      type="number"
+                      placeholder="Ex: 7"
+                      min="1"
+                      value={formData.dias_teste}
+                      onChange={(e) => setFormData({ ...formData, dias_teste: e.target.value })}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className={styles.footer}>
+              <button type="button" onClick={handleClose} className={styles.cancelBtn}>
+                Cancelar
+              </button>
+              <button type="submit" className={styles.submitBtn}>
+                Próximo
+                <ArrowLeft size={18} style={{ transform: 'rotate(180deg)' }} />
+              </button>
+            </div>
+          </form>
+        ) : (
+          <div className={`${styles.confirmStep} ${styles.fadeIn}`}>
+            <div className={styles.inviteIconWrapper}>
+              <Send size={22} />
+            </div>
+
+            <p className={styles.confirmInfo}>
+              Um email de convite será enviado para o endereço abaixo. O novo administrador poderá
+              acessar e configurar seu próprio painel.
+            </p>
+
+            <div className={styles.confirmCard}>
+              <div className={styles.confirmRow}>
+                <User size={15} className={styles.confirmRowIcon} />
+                <div className={styles.confirmRowContent}>
+                  <span className={styles.confirmRowLabel}>Nome</span>
+                  <span className={styles.confirmRowValue}>{formData.nome}</span>
                 </div>
               </div>
-            )}
-          </div>
+              <div className={styles.confirmRow}>
+                <Mail size={15} className={styles.confirmRowIcon} />
+                <div className={styles.confirmRowContent}>
+                  <span className={styles.confirmRowLabel}>Email</span>
+                  <span className={styles.confirmRowValue}>{formData.email}</span>
+                </div>
+              </div>
+              <div className={styles.confirmRow}>
+                <Phone size={15} className={styles.confirmRowIcon} />
+                <div className={styles.confirmRowContent}>
+                  <span className={styles.confirmRowLabel}>Telefone</span>
+                  <span className={styles.confirmRowValue}>{formData.telefone}</span>
+                </div>
+              </div>
 
-          <div className={styles.footer}>
-            <button type="button" onClick={onClose} className={styles.cancelBtn}>
-              Cancelar
-            </button>
-            <button type="submit" className={styles.submitBtn} disabled={loading}>
-              {loading ? <Loader2 size={18} className={styles.spinning} /> : <Check size={18} />}
-              {loading ? 'Salvando...' : 'Salvar Usuário'}
-            </button>
+              {(formData.plano_vitalicio || formData.usuario_teste) && (
+                <div className={styles.optionBadges}>
+                  {formData.plano_vitalicio && (
+                    <span className={styles.badge}>Plano Vitalício</span>
+                  )}
+                  {formData.usuario_teste && (
+                    <span className={styles.badge}>{formData.dias_teste} dias de teste</span>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className={styles.footer}>
+              <button
+                type="button"
+                onClick={() => setStep(1)}
+                className={styles.backBtn}
+                disabled={loading}
+              >
+                <ArrowLeft size={16} />
+                Voltar
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirm}
+                className={styles.submitBtn}
+                disabled={loading}
+              >
+                {loading ? <Loader2 size={18} className={styles.spinning} /> : <Check size={18} />}
+                {loading ? 'Enviando...' : 'Confirmar e Enviar Convite'}
+              </button>
+            </div>
           </div>
-        </form>
+        )}
       </div>
     </div>
   );
