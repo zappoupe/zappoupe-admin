@@ -1,7 +1,8 @@
 import { useState, FormEvent } from 'react';
 import styles from './AddUserModal.module.css';
-import { X, User, Phone, Check, Loader2, Mail, Calendar, ArrowLeft, Send } from 'lucide-react';
-import { supabase, adminSupabase } from '../../../lib/supabase';
+import { X, User, Phone, Check, Loader2, Mail, Calendar, ArrowLeft, Send, Lock } from 'lucide-react';
+import { adminSupabase } from '../../../lib/supabase';
+import { purgeAdminByEmail } from '../../../lib/adminUserService';
 
 interface AddUserModalProps {
   isOpen: boolean;
@@ -13,6 +14,8 @@ const defaultForm = {
   nome: '',
   email: '',
   telefone: '',
+  senha: '',
+  confirmarSenha: '',
   plano_vitalicio: false,
   usuario_teste: false,
   dias_teste: '7',
@@ -33,17 +36,40 @@ export default function AddUserModal({ isOpen, onClose, onUserAdded }: AddUserMo
 
   const handleNextStep = (e: FormEvent) => {
     e.preventDefault();
+    if (formData.senha.length < 6) {
+      alert('A senha deve ter pelo menos 6 caracteres.');
+      return;
+    }
+    if (formData.senha !== formData.confirmarSenha) {
+      alert('As senhas não coincidem.');
+      return;
+    }
     setStep(2);
   };
 
   const handleConfirm = async () => {
     setLoading(true);
     try {
-      const { error: dbError } = await supabase
+      // "Refaz do zero": remove qualquer admin/conta de login pre-existente com esse
+      // email antes de recriar. Resolve o duplicate key (admin_users_email_key) e o
+      // "user already registered" do Auth de uma vez.
+      await purgeAdminByEmail(formData.email);
+
+      // Cria a conta de login JA com a senha definida (email_confirm:true => sem email).
+      const { data: authData, error: authError } = await adminSupabase.auth.admin.createUser({
+        email: formData.email,
+        password: formData.senha,
+        email_confirm: true,
+        app_metadata: { role: 'admin' },
+        user_metadata: { nome: formData.nome, celular: formData.telefone },
+      });
+      if (authError) throw authError;
+
+      const { error: dbError } = await adminSupabase
         .from('admin_users')
         .insert([
           {
-            id: crypto.randomUUID(),
+            id: authData?.user?.id || crypto.randomUUID(),
             nome: formData.nome,
             email: formData.email,
             celular: formData.telefone,
@@ -63,18 +89,6 @@ export default function AddUserModal({ isOpen, onClose, onUserAdded }: AddUserMo
           },
         ]);
       if (dbError) throw dbError;
-
-      const { data: inviteData, error: inviteError } = await adminSupabase.auth.admin.inviteUserByEmail(
-        formData.email,
-        { data: { nome: formData.nome, celular: formData.telefone } }
-      );
-      if (inviteError) throw inviteError;
-
-      if (inviteData?.user?.id) {
-        await adminSupabase.auth.admin.updateUserById(inviteData.user.id, {
-          app_metadata: { role: 'admin' },
-        });
-      }
 
       if (onUserAdded) onUserAdded();
       handleClose();
@@ -146,6 +160,36 @@ export default function AddUserModal({ isOpen, onClose, onUserAdded }: AddUserMo
               </div>
             </div>
 
+            <div className={styles.inputGroup}>
+              <label>Senha de Acesso</label>
+              <div className={styles.inputWrapper}>
+                <Lock size={18} className={styles.icon} />
+                <input
+                  type="password"
+                  placeholder="Mínimo 6 caracteres"
+                  required
+                  autoComplete="new-password"
+                  value={formData.senha}
+                  onChange={(e) => setFormData({ ...formData, senha: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div className={styles.inputGroup}>
+              <label>Confirmar Senha</label>
+              <div className={styles.inputWrapper}>
+                <Lock size={18} className={styles.icon} />
+                <input
+                  type="password"
+                  placeholder="Repita a senha"
+                  required
+                  autoComplete="new-password"
+                  value={formData.confirmarSenha}
+                  onChange={(e) => setFormData({ ...formData, confirmarSenha: e.target.value })}
+                />
+              </div>
+            </div>
+
             <div className={styles.adminFields}>
               <div className={styles.toggles}>
                 <label className={styles.toggleWrapper}>
@@ -203,8 +247,8 @@ export default function AddUserModal({ isOpen, onClose, onUserAdded }: AddUserMo
             </div>
 
             <p className={styles.confirmInfo}>
-              Um email de convite será enviado para o endereço abaixo. O novo administrador poderá
-              acessar e configurar seu próprio painel.
+              A conta será criada com a senha definida. O novo administrador já pode entrar
+              direto com o e-mail e a senha — sem precisar de e-mail de convite.
             </p>
 
             <div className={styles.confirmCard}>
@@ -259,7 +303,7 @@ export default function AddUserModal({ isOpen, onClose, onUserAdded }: AddUserMo
                 disabled={loading}
               >
                 {loading ? <Loader2 size={18} className={styles.spinning} /> : <Check size={18} />}
-                {loading ? 'Enviando...' : 'Confirmar e Enviar Convite'}
+                {loading ? 'Criando...' : 'Confirmar e Criar Conta'}
               </button>
             </div>
           </div>

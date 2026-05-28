@@ -1,8 +1,9 @@
 import { useState, useMemo, useEffect } from 'react';
 import styles from './UserTable.module.css';
-import { MoreVertical, CheckCircle, XCircle, Trash2, UserX, Search, ArrowUpDown, ArrowUp, ArrowDown, RefreshCw } from 'lucide-react';
+import { MoreVertical, CheckCircle, XCircle, Trash2, UserX, Search, ArrowUpDown, ArrowUp, ArrowDown, RefreshCw, KeyRound } from 'lucide-react';
 import AddUserModal from './AddUserModal';
-import { supabase } from '../../../lib/supabase';
+import { supabase, adminSupabase } from '../../../lib/supabase';
+import { deleteAuthUserByEmail, resetPasswordByEmail } from '../../../lib/adminUserService';
 
 type User = {
   id: string;
@@ -37,6 +38,9 @@ export default function UserTable({ filters }: UserTableProps) {
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: null, direction: 'asc' });
+  const [resetTarget, setResetTarget] = useState<{ email: string; nome: string } | null>(null);
+  const [newPassword, setNewPassword] = useState('');
+  const [resetLoading, setResetLoading] = useState(false);
 
   const calculateAmount = (user: User) => {
     if (user.tipo === 'Admin') {
@@ -121,6 +125,7 @@ export default function UserTable({ filters }: UserTableProps) {
           id: m.id,
           nome: m.nome,
           telefone: m.telefone || '',
+          email: m.email || '', // permite reset de senha do familiar
           plano: 'family',
           ativo: owner ? owner.ativo : false, // Status depends on owner
           is_anual: false,
@@ -184,7 +189,7 @@ export default function UserTable({ filters }: UserTableProps) {
     setActiveMenu(null);
   };
 
-  const deleteUser = async (id: string, tipo: 'Dono' | 'Familiar' | 'Admin') => {
+  const deleteUser = async (id: string, tipo: 'Dono' | 'Familiar' | 'Admin', email?: string) => {
     if (window.confirm('Tem certeza que deseja excluir este usuário?')) {
       try {
         let table = '';
@@ -192,18 +197,46 @@ export default function UserTable({ filters }: UserTableProps) {
         else if (tipo === 'Familiar') table = 'membros_familia';
         else table = 'admin_users';
 
-        const { error } = await supabase
+        // Service role (adminSupabase) bypassa RLS — garante que o DELETE realmente
+        // remove a linha (com anon key o RLS bloqueava silenciosamente).
+        const { error } = await adminSupabase
           .from(table)
           .delete()
           .eq('id', id);
 
         if (error) throw error;
+
+        // Admin tambem tem conta de login (Supabase Auth) — remove pra liberar o email.
+        if (tipo === 'Admin' && email) {
+          await deleteAuthUserByEmail(email);
+        }
+
         setUsers(users.filter(user => user.id !== id));
       } catch (error) {
         console.error('Erro ao excluir usuário:', error);
+        alert('Erro ao excluir usuário: ' + ((error as any)?.message || 'tente novamente'));
       }
     }
     setActiveMenu(null);
+  };
+
+  const handleResetPassword = async () => {
+    if (!resetTarget) return;
+    if (newPassword.length < 6) {
+      alert('A senha deve ter pelo menos 6 caracteres.');
+      return;
+    }
+    setResetLoading(true);
+    try {
+      await resetPasswordByEmail(resetTarget.email, newPassword);
+      alert(`Senha de ${resetTarget.nome} redefinida com sucesso!`);
+      setResetTarget(null);
+      setNewPassword('');
+    } catch (error) {
+      alert('Erro ao redefinir senha: ' + ((error as any)?.message || 'tente novamente'));
+    } finally {
+      setResetLoading(false);
+    }
   };
 
   const handleSort = (key: 'nome' | 'plano' | 'ativo' | 'tipo') => {
@@ -364,7 +397,16 @@ export default function UserTable({ filters }: UserTableProps) {
                           <UserX size={16} />
                           {user.ativo ? 'Inativar' : 'Ativar'}
                         </button>
-                        <button onClick={() => deleteUser(user.id, user.tipo)} className={`${styles.menuItem} ${styles.delete}`}>
+                        {user.email && (
+                          <button
+                            onClick={() => { setResetTarget({ email: user.email!, nome: user.nome }); setActiveMenu(null); }}
+                            className={styles.menuItem}
+                          >
+                            <KeyRound size={16} />
+                            Resetar senha
+                          </button>
+                        )}
+                        <button onClick={() => deleteUser(user.id, user.tipo, user.email)} className={`${styles.menuItem} ${styles.delete}`}>
                           <Trash2 size={16} />
                           Excluir
                         </button>
@@ -378,11 +420,73 @@ export default function UserTable({ filters }: UserTableProps) {
         )}
       </div>
 
-      <AddUserModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
+      <AddUserModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
         onUserAdded={fetchUsers}
       />
+
+      {resetTarget && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
+          }}
+          onClick={() => !resetLoading && setResetTarget(null)}
+        >
+          <div
+            style={{
+              background: '#fff', borderRadius: '12px', padding: '28px',
+              width: '90%', maxWidth: '420px', boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 style={{ margin: '0 0 6px', display: 'flex', alignItems: 'center', gap: '8px', color: '#2e3d30' }}>
+              <KeyRound size={20} /> Resetar Senha
+            </h3>
+            <p style={{ fontSize: '14px', color: '#6b7280', margin: '0 0 18px' }}>
+              Definindo nova senha para <strong>{resetTarget.nome}</strong> ({resetTarget.email}).
+            </p>
+
+            <label style={{ fontSize: '13px', fontWeight: 'bold', color: '#4a634d' }}>Nova Senha</label>
+            <input
+              type="password"
+              autoFocus
+              autoComplete="new-password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              placeholder="Mínimo 6 caracteres"
+              style={{
+                width: '100%', boxSizing: 'border-box', padding: '12px', marginTop: '6px',
+                borderRadius: '6px', border: '1px solid #ccc', fontSize: '16px',
+              }}
+            />
+
+            <div style={{ display: 'flex', gap: '10px', marginTop: '22px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => { setResetTarget(null); setNewPassword(''); }}
+                disabled={resetLoading}
+                style={{
+                  padding: '10px 18px', borderRadius: '6px', border: '1px solid #ccc',
+                  background: '#fff', cursor: 'pointer', fontWeight: 600,
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleResetPassword}
+                disabled={resetLoading}
+                style={{
+                  padding: '10px 18px', borderRadius: '6px', border: 'none',
+                  background: '#89b321', color: '#fff', cursor: 'pointer', fontWeight: 600,
+                }}
+              >
+                {resetLoading ? 'Salvando...' : 'Salvar Nova Senha'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
