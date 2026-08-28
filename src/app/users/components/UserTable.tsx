@@ -172,6 +172,16 @@ export default function UserTable({ filters }: UserTableProps) {
       return;
     }
 
+    // Sem confirmacao, dois cliques errados no menu tiram o acesso de um
+    // cliente pagante sem deixar rastro — foi assim que robson@zr3.com.br e
+    // josueoliver1@hotmail.com ficaram com ativo=false e status=trialing,
+    // combinacao que o webhook nunca gera e que custou caro pra diagnosticar.
+    const acao = currentStatus ? 'DESATIVAR' : 'reativar';
+    if (!window.confirm(`Tem certeza que deseja ${acao} este usuario?`)) {
+      setActiveMenu(null);
+      return;
+    }
+
     try {
       const table = tipo === 'Dono' ? 'assinaturas' : 'admin_users';
       const { error } = await supabase
